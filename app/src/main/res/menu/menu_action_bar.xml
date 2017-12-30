@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/most_popular"
+        android:icon="@drawable/ic_action_most_popular"
+        android:title="@string/most_popular"/>
+
+    <item
+        android:id="@+id/top_rated"
+        android:icon="@drawable/ic_action_top_rated"
+        android:title="@string/top_rated"/>
+
+    <item
+        android:id="@+id/favourites"
+        android:icon="@drawable/ic_action_fav"
+        android:title="@string/favourites"/>
+
+</menu>

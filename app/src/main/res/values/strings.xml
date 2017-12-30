@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">Popular Movies</string>
+    <string name="most_popular">Most popular</string>
+    <string name="top_rated">Top rated</string>
+    <string name="favourites">Favourites</string>
+    <string name="movie_poster">Movie poster</string>
+
+    <string name="movie_title">Movie Title</string>
+    <string name="vote_rate">5.0</string>
+    <string name="overview">Overview</string>
+    <string name="release_date">0000-00-00</string>
+    <string name="trailers">Trailers:</string>
+    <string name="duration">150 Min</string>
+    <string name="mark_favourite">Mark as Favourite</string>
+    <string name="check_network_connection">Check Network Connection!!</string>
+    <string name="added_to_fav">added to favourites.</string>
+    <string name="removed_from_fav">removed from favourites.</string>
+    <string name="no_favourite_movies">No favourite movies found.</string>
+    <string name="Dialog_please_wait">Loading, Please wait...</string>
+    <string name="remove_from_fav">Remove from Favourite</string>
+
+</resources>
