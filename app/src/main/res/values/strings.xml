@@ -18,5 +18,9 @@
     <string name="no_favourite_movies">No favourite movies found.</string>
     <string name="Dialog_please_wait">Loading, Please wait...</string>
     <string name="remove_from_fav">Remove from Favourite</string>
+    <string name="review_text">Review text</string>
+    <string name="review_author">Review author</string>
+    <string name="reviews">Reviews:</string>
+    <string name="failed_to_get_reviews">Failed to get reviews!!</string>
 
 </resources>

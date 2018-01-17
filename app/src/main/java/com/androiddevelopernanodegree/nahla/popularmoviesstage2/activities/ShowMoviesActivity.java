@@ -93,7 +93,7 @@ public class ShowMoviesActivity extends AppCompatActivity {
     }
 
     private void initViews() {
-        moviesRecyclerView = (RecyclerView) findViewById(R.id.movies_posters_recycler_view);
+        moviesRecyclerView = findViewById(R.id.movies_posters_recycler_view);
         actionBar = getSupportActionBar();
         moviesList = new ArrayList<>();
         apiService = ApiClient.getClient().create(ApiInterface.class);

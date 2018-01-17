@@ -11,6 +11,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.androiddevelopernanodegree.nahla.popularmoviesstage2.MainActivity;
 import com.androiddevelopernanodegree.nahla.popularmoviesstage2.R;
 import com.androiddevelopernanodegree.nahla.popularmoviesstage2.activities.MovieDataActivity;
 import com.androiddevelopernanodegree.nahla.popularmoviesstage2.models.Result;
@@ -82,9 +83,12 @@ public class RecyclerViewMoviesAdapter extends RecyclerView.Adapter<RecyclerView
             if (view.getId() == itemView.getId()){
                 int position = getAdapterPosition();
                 Result chosenMovie = moviesList.get(position);
-                Intent intent = new Intent(itemView.getContext(), MovieDataActivity.class);
+                Intent intent = new Intent(itemView.getContext(), MainActivity.class);
                 intent.putExtra("MovieData",chosenMovie);
                 itemView.getContext().startActivity(intent);
+//                Intent intent = new Intent(itemView.getContext(), MovieDataActivity.class);
+//                intent.putExtra("MovieData",chosenMovie);
+//                itemView.getContext().startActivity(intent);
             }
         }
     }

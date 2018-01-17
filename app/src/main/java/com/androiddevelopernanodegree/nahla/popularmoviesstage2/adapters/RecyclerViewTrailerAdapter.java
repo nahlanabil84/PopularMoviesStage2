@@ -59,12 +59,12 @@ public class RecyclerViewTrailerAdapter extends RecyclerView.Adapter<RecyclerVie
             super(itemView);
             playTrailerIV = itemView.findViewById(R.id.trailer_watch_imageView);
             trailerNumTV = itemView.findViewById(R.id.trailer_name_textView);
-            playTrailerIV.setOnClickListener(this);
+            itemView.setOnClickListener(this);
         }
 
         @Override
         public void onClick(View v) {
-            if(v.getId() == playTrailerIV.getId()){
+            if(v.getId() == itemView.getId()){
                 position = getAdapterPosition();
                 if(position != RecyclerView.NO_POSITION){
                     Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("vnd.youtube:" + trailersResults.get(position).getId()));
