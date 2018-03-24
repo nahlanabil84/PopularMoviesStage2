@@ -16,7 +16,6 @@ public class FavMoviesContentProvider extends ContentProvider {
     public final static String AUTHORITY_NAME = "com.androiddevelopernanodegree.nahla.popularmoviesstage2.database";
 
     public final static Uri URI_MOVIE = Uri.parse("content://" + AUTHORITY_NAME + "/" + Favourites.FavouriteEntry.TABLE_NAME);
-    public final static Uri URI_MOVIE_ID = Uri.parse("content://" + AUTHORITY_NAME + "/" + Favourites.FavouriteEntry.TABLE_NAME + "/" + MOVIE_ID);
 
     private FavouriteDBHelper favouriteDBHelper;
 
@@ -36,8 +35,19 @@ public class FavMoviesContentProvider extends ContentProvider {
 
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
-        // Implement this to handle requests to delete one or more rows.
-        throw new UnsupportedOperationException("Not yet implemented");
+        int count = 0;
+
+        final SQLiteDatabase database = favouriteDBHelper.getWritableDatabase();
+
+        switch (uriMatcher.match(uri)) {
+            case MOVIE:
+                count = database.delete(Favourites.FavouriteEntry.TABLE_NAME, selection, selectionArgs);
+                break;
+            case MOVIE_ID:
+                count = database.delete(Favourites.FavouriteEntry.TABLE_NAME, selection, selectionArgs);
+                break;
+        }
+        return count;
     }
 
     @Override
@@ -102,7 +112,18 @@ public class FavMoviesContentProvider extends ContentProvider {
     @Override
     public int update(Uri uri, ContentValues values, String selection,
                       String[] selectionArgs) {
-        // TODO: Implement this to handle requests to update one or more rows.
-        throw new UnsupportedOperationException("Not yet implemented");
+        int count = 0;
+
+        final SQLiteDatabase database = favouriteDBHelper.getWritableDatabase();
+
+        switch (uriMatcher.match(uri)) {
+            case MOVIE:
+                count = database.update(Favourites.FavouriteEntry.TABLE_NAME, values, selection, selectionArgs);
+                break;
+            case MOVIE_ID:
+                count = database.update(Favourites.FavouriteEntry.TABLE_NAME, values, selection, selectionArgs);
+                break;
+        }
+        return count;
     }
 }

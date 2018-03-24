@@ -1,15 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context="com.androiddevelopernanodegree.nahla.popularmoviesstage2.activities.ShowMoviesActivity">
+    android:layout_height="match_parent">
 
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/movies_posters_recycler_view"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:scrollbars="vertical" />
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/movies_posters_recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="vertical"
+        app:spanCount="2"
+        app:layoutManager="android.support.v7.widget.GridLayoutManager"
+        tools:listitem="@layout/item_movie" />
 
-</LinearLayout>
+    <TextView
+        android:id="@+id/sizeZero_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:layout_marginBottom="16dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/shape_text"
+        android:gravity="center"
+        android:padding="8dp"
+        android:text="@string/no_favourite_movies"
+        android:textColor="@color/colorPrimaryDark"
+        android:textSize="35pt"
+        android:textStyle="bold"
+        android:visibility="gone" />
+
+</RelativeLayout>

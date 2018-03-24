@@ -15,7 +15,7 @@
     <string name="check_network_connection">Check Network Connection!!</string>
     <string name="added_to_fav">added to favourites.</string>
     <string name="removed_from_fav">removed from favourites.</string>
-    <string name="no_favourite_movies">No favourite movies found.</string>
+    <string name="no_favourite_movies">No Favourites</string>
     <string name="Dialog_please_wait">Loading, Please wait...</string>
     <string name="remove_from_fav">Remove from Favourite</string>
     <string name="review_text">Review text</string>
@@ -25,5 +25,10 @@
     <string name="cancel">Cancel</string>
     <string name="x">X</string>
     <string name="already_favorited">is already favorited!!</string>
+    <string name="not_added">is not added!!</string>
+    <string name="not_removed_from_fav">not removed from favorites</string>
+    <string name="no_trailers">No Trailers</string>
+    <string name="no_reviews">No Reviews</string>
+    <string name="failed_to_get_trailers">Failed to get trailers!!</string>
 
 </resources>

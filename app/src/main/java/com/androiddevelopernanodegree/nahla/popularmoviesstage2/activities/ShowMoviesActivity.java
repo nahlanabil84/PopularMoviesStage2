@@ -3,6 +3,7 @@ package com.androiddevelopernanodegree.nahla.popularmoviesstage2.activities;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.res.Configuration;
+import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
@@ -14,11 +15,14 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.androiddevelopernanodegree.nahla.popularmoviesstage2.R;
 import com.androiddevelopernanodegree.nahla.popularmoviesstage2.adapters.RecyclerViewMoviesAdapter;
-import com.androiddevelopernanodegree.nahla.popularmoviesstage2.database.FavouriteDBHelper;
+import com.androiddevelopernanodegree.nahla.popularmoviesstage2.database.FavMoviesContentProvider;
+import com.androiddevelopernanodegree.nahla.popularmoviesstage2.database.Favourites;
 import com.androiddevelopernanodegree.nahla.popularmoviesstage2.models.MovieResponse;
 import com.androiddevelopernanodegree.nahla.popularmoviesstage2.models.Result;
 import com.androiddevelopernanodegree.nahla.popularmoviesstage2.retrofit.ApiClient;
@@ -36,8 +40,8 @@ public class ShowMoviesActivity extends AppCompatActivity {
     //TODO Insert your API_KEY
     public final static String API_KEY = "INSERT_YOUR_API_KEY";
     private RecyclerView moviesRecyclerView;
+    private TextView noMovies;
     private List<Result> moviesList;
-    private FavouriteDBHelper favouriteDBHelper;
     private ApiInterface apiService;
     private RecyclerViewMoviesAdapter recyclerViewMoviesAdapter;
     private ProgressDialog dialog;
@@ -77,7 +81,7 @@ public class ShowMoviesActivity extends AppCompatActivity {
                 getTopRatedMovies();
                 return true;
             case R.id.favourites:
-                getFavourites();
+                getFavouritesContentProvider();
                 return true;
         }
 
@@ -93,10 +97,10 @@ public class ShowMoviesActivity extends AppCompatActivity {
 
     private void initViews() {
         moviesRecyclerView = findViewById(R.id.movies_posters_recycler_view);
+        noMovies = findViewById(R.id.sizeZero_tv);
         actionBar = getSupportActionBar();
         moviesList = new ArrayList<>();
         apiService = ApiClient.getClient().create(ApiInterface.class);
-        favouriteDBHelper = new FavouriteDBHelper(getApplicationContext());
         setLoadingDialog();
     }
 
@@ -120,16 +124,46 @@ public class ShowMoviesActivity extends AppCompatActivity {
         dialog.setCancelable(false);
     }
 
-    private void getFavourites() {
+    private void getFavouritesContentProvider() {
         dialog.show();
         favouritesList = new ArrayList<>();
-        favouritesList = favouriteDBHelper.getAllFavourite();
-        if (favouritesList.size() == 0) {
-            dialog.dismiss();
-            Toast.makeText(getApplicationContext(), R.string.no_favourite_movies, Toast.LENGTH_SHORT).show();
-        } else if (favouritesList.size() > 0) {
+        List<Result> results = new ArrayList<>();
+        String sortingOrder = Favourites.FavouriteEntry.COLUMN_TITLE + " ASC";
+        String selection = null;
+        String[] selectionArgs = null;
+        Cursor cursor = getContentResolver().query(FavMoviesContentProvider.URI_MOVIE, null, selection, selectionArgs, sortingOrder);
+
+        if (cursor != null && cursor.getCount() > 0) {
+            cursor.moveToFirst();
+
+            Result favMovie = null;
+            do {
+                favMovie = new Result();
+                favMovie.setId(cursor.getInt(1));
+                favMovie.setOriginalTitle(cursor.getString(2));
+                favMovie.setVoteAverage(cursor.getDouble(3));
+                favMovie.setPosterPath(cursor.getString(4));
+                favMovie.setOverview(cursor.getString(5));
+
+                results.add(favMovie);
+            } while (cursor.moveToNext());
+        }
+
+        favouritesList = results;
+        if (favouritesList.size() > 0) {
             setAdapters(favouritesList);
             actionBar.setTitle(getResources().getString(R.string.favourites));
+
+            noMovies.setVisibility(View.GONE);
+            moviesRecyclerView.setVisibility(View.VISIBLE);
+
+            dialog.dismiss();
+        } else {
+            actionBar.setTitle(getResources().getString(R.string.favourites));
+
+            moviesRecyclerView.setVisibility(View.GONE);
+            noMovies.setVisibility(View.VISIBLE);
+
             dialog.dismiss();
         }
     }
@@ -145,6 +179,10 @@ public class ShowMoviesActivity extends AppCompatActivity {
                         moviesList.addAll(response.body().getResults());
                         setAdapters(moviesList);
                         actionBar.setTitle(getResources().getString(R.string.most_popular));
+
+                        noMovies.setVisibility(View.GONE);
+                        moviesRecyclerView.setVisibility(View.VISIBLE);
+
                         dialog.dismiss();
                     } else {
                         dialog.dismiss();
@@ -178,6 +216,10 @@ public class ShowMoviesActivity extends AppCompatActivity {
                         moviesList = response.body().getResults();
                         setAdapters(moviesList);
                         actionBar.setTitle(getResources().getString(R.string.top_rated));
+
+                        noMovies.setVisibility(View.GONE);
+                        moviesRecyclerView.setVisibility(View.VISIBLE);
+
                         dialog.dismiss();
                     } else {
                         dialog.dismiss();

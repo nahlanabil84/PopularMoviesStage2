@@ -14,6 +14,7 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.androiddevelopernanodegree.nahla.popularmoviesstage2.R;
@@ -44,6 +45,9 @@ public class TrailersDialog extends DialogFragment {
 
     @BindView(R.id.movie_data_recycler_trailers)
     RecyclerView movieDataRecyclerTrailers;
+
+    @BindView(R.id.sizeZero_tv)
+    TextView noTrailersTV;
 
     private RecyclerViewTrailerAdapter recyclerViewTrailerAdapter;
     private List<TrailersResult> trailersResults = new ArrayList<>();
@@ -79,21 +83,34 @@ public class TrailersDialog extends DialogFragment {
     public void onStart() {
         super.onStart();
         Dialog dialog = getDialog();
-        dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+        dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.BLACK));
         dialog.getWindow().setGravity(Gravity.CENTER_VERTICAL);
     }
 
     private void loadReviews() {
         ApiClient apiClient = new ApiClient();
-        ApiInterface apiInterface = (ApiInterface) apiClient.getClient().create(ApiInterface.class);
+        ApiInterface apiInterface = apiClient.getClient().create(ApiInterface.class);
         Call<MovieTrailersResponse> call = apiInterface.getMovieTrailers(movieID, API_KEY);
         call.enqueue(new Callback<MovieTrailersResponse>() {
             @Override
             public void onResponse(Call<MovieTrailersResponse> call, Response<MovieTrailersResponse> response) {
-                trailersResults.clear();
-                trailersResults.addAll(response.body().getTrailersResults());
-                movieDataRecyclerTrailers.setAdapter(new RecyclerViewTrailerAdapter(getActivity().getApplicationContext(), trailersResults));
+                if (response.isSuccessful()) {
+                    trailersResults.clear();
+                    trailersResults.addAll(response.body().getTrailersResults());
+                    movieDataRecyclerTrailers.setAdapter(new RecyclerViewTrailerAdapter(getActivity().getApplicationContext(), trailersResults));
+
+                    if (trailersResults.size() > 0) {
+                        movieDataRecyclerTrailers.setVisibility(View.VISIBLE);
+                        noTrailersTV.setVisibility(View.GONE);
+                    } else {
+                        movieDataRecyclerTrailers.setVisibility(View.GONE);
+                        noTrailersTV.setVisibility(View.VISIBLE);
+                    }
+
+                } else {
+                    Toast.makeText(getActivity().getApplicationContext(), R.string.failed_to_get_trailers, Toast.LENGTH_LONG).show();
+                }
             }
 
             @Override

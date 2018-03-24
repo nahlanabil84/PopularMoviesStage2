@@ -14,6 +14,7 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.androiddevelopernanodegree.nahla.popularmoviesstage2.R;
@@ -29,7 +30,6 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import butterknife.Unbinder;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -44,9 +44,11 @@ import static com.androiddevelopernanodegree.nahla.popularmoviesstage2.activitie
 
 public class ReviewsDialog extends DialogFragment {
 
-    Unbinder unbinder;
     @BindView(R.id.movie_data_recycler_reviews)
     RecyclerView movieDataRecyclerReviews;
+
+    @BindView(R.id.sizeZero_tv)
+    TextView noReviewsTV;
 
     private RecyclerViewReviewsAdapter recyclerViewReviewsAdapter;
     private List<Review> reviews = new ArrayList<>();
@@ -75,7 +77,6 @@ public class ReviewsDialog extends DialogFragment {
         setAdapter();
         loadReviews();
 
-        unbinder = ButterKnife.bind(this, view);
         return view;
     }
 
@@ -100,6 +101,15 @@ public class ReviewsDialog extends DialogFragment {
                         reviews.clear();
                         reviews.addAll(response.body().getReviews());
                         recyclerViewReviewsAdapter.notifyDataSetChanged();
+
+                        if (reviews.size() > 0) {
+                            movieDataRecyclerReviews.setVisibility(View.VISIBLE);
+                            noReviewsTV.setVisibility(View.GONE);
+                        } else {
+                            movieDataRecyclerReviews.setVisibility(View.GONE);
+                            noReviewsTV.setVisibility(View.VISIBLE);
+                        }
+
                     } else {
                         Log.v(TAG, response.errorBody().toString());
                         Toast.makeText(getActivity().getApplicationContext(), R.string.failed_to_get_reviews, Toast.LENGTH_LONG).show();
@@ -129,11 +139,5 @@ public class ReviewsDialog extends DialogFragment {
     @OnClick(R.id.cancelB)
     public void onViewClicked() {
         this.dismiss();
-    }
-
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        unbinder.unbind();
     }
 }
