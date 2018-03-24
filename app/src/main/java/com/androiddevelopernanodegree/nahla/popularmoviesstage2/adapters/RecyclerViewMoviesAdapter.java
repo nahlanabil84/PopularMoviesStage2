@@ -1,6 +1,5 @@
 package com.androiddevelopernanodegree.nahla.popularmoviesstage2.adapters;
 
-import android.content.Context;
 import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -9,9 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.androiddevelopernanodegree.nahla.popularmoviesstage2.MainActivity;
 import com.androiddevelopernanodegree.nahla.popularmoviesstage2.R;
 import com.androiddevelopernanodegree.nahla.popularmoviesstage2.activities.MovieDataActivity;
 import com.androiddevelopernanodegree.nahla.popularmoviesstage2.models.Result;
@@ -37,7 +34,7 @@ public class RecyclerViewMoviesAdapter extends RecyclerView.Adapter<RecyclerView
     @Override
     public RecyclerViewMoviesAdapter.MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View itemView = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.movie_item, parent, false);
+                .inflate(R.layout.item_movie, parent, false);
 
         return new MyViewHolder(itemView);
     }
@@ -54,8 +51,6 @@ public class RecyclerViewMoviesAdapter extends RecyclerView.Adapter<RecyclerView
         Log.d("Poster: ",moviesList.get(position).getOriginalTitle());
         }
         holder.titleTextView.setText(moviesList.get(position).getOriginalTitle());
-//        Log.d("Poster: ",moviesList.get(position).getOriginalTitle());
-
 
     }
 
@@ -83,12 +78,9 @@ public class RecyclerViewMoviesAdapter extends RecyclerView.Adapter<RecyclerView
             if (view.getId() == itemView.getId()){
                 int position = getAdapterPosition();
                 Result chosenMovie = moviesList.get(position);
-                Intent intent = new Intent(itemView.getContext(), MainActivity.class);
+                Intent intent = new Intent(itemView.getContext(), MovieDataActivity.class);
                 intent.putExtra("MovieData",chosenMovie);
                 itemView.getContext().startActivity(intent);
-//                Intent intent = new Intent(itemView.getContext(), MovieDataActivity.class);
-//                intent.putExtra("MovieData",chosenMovie);
-//                itemView.getContext().startActivity(intent);
             }
         }
     }

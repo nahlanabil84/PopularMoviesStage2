@@ -1,34 +1,35 @@
 package com.androiddevelopernanodegree.nahla.popularmoviesstage2.activities;
 
 import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
-import android.support.design.widget.TabLayout;
-import android.support.v4.view.ViewPager;
+import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.androiddevelopernanodegree.nahla.popularmoviesstage2.R;
-import com.androiddevelopernanodegree.nahla.popularmoviesstage2.adapters.ViewPagerAdapter;
 import com.androiddevelopernanodegree.nahla.popularmoviesstage2.database.FavouriteDBHelper;
-import com.androiddevelopernanodegree.nahla.popularmoviesstage2.fragments.ReviewsFragment;
-import com.androiddevelopernanodegree.nahla.popularmoviesstage2.fragments.TrailersFragment;
+import com.androiddevelopernanodegree.nahla.popularmoviesstage2.dialogs.ReviewsDialog;
+import com.androiddevelopernanodegree.nahla.popularmoviesstage2.dialogs.TrailersDialog;
 import com.androiddevelopernanodegree.nahla.popularmoviesstage2.models.Result;
 import com.github.ivbaranov.mfb.MaterialFavoriteButton;
 import com.squareup.picasso.Picasso;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+
 import static com.androiddevelopernanodegree.nahla.popularmoviesstage2.models.Result.IMAGE_BASE_URL;
 
-public class MovieDataActivity extends AppCompatActivity {
+public class MovieDataActivity extends AppCompatActivity{
+    public static final String MOVIE_ID = "movie_id";
     private Result chosenMovie;
     private ImageView moviePosterThumbnailIV;
     private TextView movieTitleTV, movieOverviewTV, movieVoteAverageTV, movieReleaseDateTV;
-    private TabLayout tabLayout;
-    private ViewPager viewPager;
     private String title, backdropPath, overview, releaseDate;
     private double voteAverage;
     private FavouriteDBHelper favouriteDBHelper;
@@ -36,14 +37,19 @@ public class MovieDataActivity extends AppCompatActivity {
     private MaterialFavoriteButton materialFavoriteButton;
     private ActionBar actionBar;
     private String posterPath;
+    private boolean isFavorited;
+    private List<Result> favouritesList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_movie_data);
 
+        ButterKnife.bind(this);
+
+        chosenMovie = (Result) getIntent().getSerializableExtra("MovieData");
+
         initViews();
-        setTabViewPager(viewPager);
         getData();
         actionBar.setTitle(title);
         setActions();
@@ -51,39 +57,61 @@ public class MovieDataActivity extends AppCompatActivity {
     }
 
     private void setActions() {
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         materialFavoriteButton.setOnFavoriteChangeListener(
-                new MaterialFavoriteButton.OnFavoriteChangeListener(){
+                new MaterialFavoriteButton.OnFavoriteChangeListener() {
                     @Override
-                    public void onFavoriteChanged(MaterialFavoriteButton buttonView, boolean favorite){
-                        if (favorite){
-                            SharedPreferences.Editor editor =
-                                    getSharedPreferences("com.androiddevelopernanodegree.nahla" +
-                                                    ".popularmoviesstage2.activities.MovieDataActivity"
-                                    , MODE_PRIVATE).edit();
-                            editor.putBoolean("Favorite Added", true);
-                            editor.commit();
-                            saveFavourite();
-                            Toast.makeText(getApplicationContext(), chosenMovie.getOriginalTitle() + " "
-                                    + getResources().getString(R.string.added_to_fav), Toast.LENGTH_SHORT).show();
+                    public void onFavoriteChanged(MaterialFavoriteButton buttonView, boolean favorite) {
+                        if (favorite) {
+                            if (!isFavorited) {
+                                SharedPreferences.Editor editor =
+                                        getSharedPreferences("com.androiddevelopernanodegree.nahla" +
+                                                        ".popularmoviesstage2.activities.MovieDataActivity"
+                                                , MODE_PRIVATE).edit();
+                                editor.putBoolean("Favorite Added", true);
+                                editor.commit();
+                                saveFavourite();
+                                Toast.makeText(getApplicationContext(), chosenMovie.getOriginalTitle() + " "
+                                        + getResources().getString(R.string.added_to_fav), Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(getApplicationContext(), chosenMovie.getOriginalTitle() + " "
+                                        + getResources().getString(R.string.already_favorited), Toast.LENGTH_SHORT).show();
+                            }
 
-                        }else{
-                            int movie_id = getIntent().getExtras().getInt("id");
-                            removeFavourite(movie_id);
+                        } else {
+                            removeFavourite(chosenMovie.getId());
                             SharedPreferences.Editor editor =
                                     getSharedPreferences("com.androiddevelopernanodegree.nahla" +
                                                     ".popularmoviesstage2.activities.MovieDataActivity"
-                                    , MODE_PRIVATE).edit();
+                                            , MODE_PRIVATE).edit();
                             editor.putBoolean("Favorite Removed", true);
                             editor.commit();
                             Toast.makeText(getApplicationContext(), chosenMovie.getOriginalTitle() + " "
                                     + getResources().getString(R.string.removed_from_fav), Toast.LENGTH_SHORT).show();
                         }
-
                     }
                 }
         );
 
+    }
+
+    private boolean searchInFavorites(int id) {
+        boolean isFav = false;
+
+        favouriteDBHelper = new FavouriteDBHelper(getApplicationContext());
+        favouritesList = favouriteDBHelper.getAllFavourite();
+        if (favouritesList.size() == 0) {
+            isFav = false;
+        } else if (favouritesList.size() > 0) {
+            for (int i = 0; i < favouritesList.size(); i++) {
+                if (favouritesList.get(i).getId() == id) {
+                    isFav = true;
+                    break;
+                } else
+                    isFav = false;
+            }
+        }
+
+        return isFav;
     }
 
     @Override
@@ -94,16 +122,16 @@ public class MovieDataActivity extends AppCompatActivity {
 
     private void setData() {
         String url;
-        if(backdropPath != null){
+        if (backdropPath != null) {
             url = IMAGE_BASE_URL + backdropPath;
-        }else {
+        } else {
             url = IMAGE_BASE_URL + posterPath;
         }
         Picasso.with(this).load(url).into(moviePosterThumbnailIV);
         movieTitleTV.setText(title);
         movieOverviewTV.setText(overview);
         movieVoteAverageTV.setText(String.valueOf(voteAverage));
-        if(releaseDate==null)
+        if (releaseDate == null)
             movieReleaseDateTV.setVisibility(View.GONE);
         movieReleaseDateTV.setText(releaseDate);
 
@@ -116,19 +144,23 @@ public class MovieDataActivity extends AppCompatActivity {
         movieVoteAverageTV = (TextView) findViewById(R.id.movie_vote_rate_text_view);
         movieReleaseDateTV = (TextView) findViewById(R.id.movie_release_date_text_view);
         materialFavoriteButton = (MaterialFavoriteButton) findViewById(R.id.movie_star_markAsFavourite);
-        tabLayout = (TabLayout) findViewById(R.id.tabs);
-        viewPager = (ViewPager) findViewById(R.id.viewpager);
         actionBar = getSupportActionBar();
+        isFavorited = searchInFavorites(chosenMovie.getId());
     }
 
     private void getData() {
-        chosenMovie = (Result) getIntent().getSerializableExtra("MovieData");
         title = chosenMovie.getOriginalTitle();
         backdropPath = chosenMovie.getBackdropPath();
         posterPath = chosenMovie.getPosterPath();
         overview = chosenMovie.getOverview();
         voteAverage = chosenMovie.getVoteAverage();
         releaseDate = chosenMovie.getReleaseDate();
+
+        if (isFavorited) {
+            materialFavoriteButton.setFavorite(true);
+        } else
+            materialFavoriteButton.setFavorite(false);
+
     }
 
     private void removeFavourite(int id) {
@@ -150,12 +182,25 @@ public class MovieDataActivity extends AppCompatActivity {
 
     }
 
-    private void setTabViewPager(ViewPager viewPager){
-        ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
-        adapter.addFrag(new TrailersFragment(),getResources().getString(R.string.trailers));
-        adapter.addFrag(new ReviewsFragment(), getResources().getString(R.string.reviews));
-        viewPager.setAdapter(adapter);
-        tabLayout.setupWithViewPager(viewPager);
+    @OnClick({R.id.trailersB, R.id.reviewsB})
+    public void onViewClicked(View view) {
+        switch (view.getId()) {
+            case R.id.trailersB:
+                showTrailersDialog();
+                break;
+            case R.id.reviewsB:
+                showReviewsDialog();
+                break;
+        }
     }
 
+    private void showReviewsDialog() {
+        ReviewsDialog dialog = ReviewsDialog.newInstance(chosenMovie.getId());
+        dialog.show(getFragmentManager(), "reviews");
+    }
+
+    private void showTrailersDialog() {
+        TrailersDialog dialog = TrailersDialog.newInstance(chosenMovie.getId());
+        dialog.show(getFragmentManager(), "reviews");
+    }
 }

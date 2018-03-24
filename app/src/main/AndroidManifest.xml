@@ -22,7 +22,12 @@
         <activity
             android:name=".activities.MovieDataActivity"
             android:parentActivityName=".activities.ShowMoviesActivity" />
-        <activity android:name=".MainActivity"></activity>
+
+        <provider
+            android:name=".database.FavMoviesContentProvider"
+            android:authorities="com.androiddevelopernanodegree.nahla.popularmoviesstage2.database"
+            android:enabled="true"
+            android:exported="true"></provider>
     </application>
 
 </manifest>

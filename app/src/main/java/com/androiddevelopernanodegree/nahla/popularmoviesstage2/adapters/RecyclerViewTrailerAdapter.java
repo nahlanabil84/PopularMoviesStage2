@@ -1,5 +1,6 @@
 package com.androiddevelopernanodegree.nahla.popularmoviesstage2.adapters;
 
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -26,7 +27,6 @@ public class RecyclerViewTrailerAdapter extends RecyclerView.Adapter<RecyclerVie
     private int position;
 
 
-
     public RecyclerViewTrailerAdapter(Context context, List<TrailersResult> trailersResults) {
         this.context = context;
         this.trailersResults = trailersResults;
@@ -51,7 +51,7 @@ public class RecyclerViewTrailerAdapter extends RecyclerView.Adapter<RecyclerVie
         return trailersResults.size();
     }
 
-    public class TrailerHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
+    public class TrailerHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         ImageView playTrailerIV;
         TextView trailerNumTV;
 
@@ -64,12 +64,17 @@ public class RecyclerViewTrailerAdapter extends RecyclerView.Adapter<RecyclerVie
 
         @Override
         public void onClick(View v) {
-            if(v.getId() == itemView.getId()){
+            if (v.getId() == itemView.getId()) {
                 position = getAdapterPosition();
-                if(position != RecyclerView.NO_POSITION){
-                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("vnd.youtube:" + trailersResults.get(position).getId()));
-                    intent.putExtra("VIDEO_ID",trailersResults.get(position).getId());
-                    context.startActivity(intent);
+                if (position != RecyclerView.NO_POSITION) {
+                    Intent appIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("vnd.youtube:" + trailersResults.get(position).getKey()));
+                    Intent webIntent = new Intent(Intent.ACTION_VIEW,
+                            Uri.parse("http://www.youtube.com/watch?v=" + trailersResults.get(position).getKey()));
+                    try {
+                        context.startActivity(appIntent);
+                    } catch (ActivityNotFoundException ex) {
+                        context.startActivity(webIntent);
+                    }
 
                 }
             }

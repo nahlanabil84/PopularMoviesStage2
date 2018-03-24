@@ -5,10 +5,9 @@ import android.content.Context;
 import android.content.res.Configuration;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.os.AsyncTask;
+import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -101,9 +100,9 @@ public class ShowMoviesActivity extends AppCompatActivity {
         setLoadingDialog();
     }
 
-    private void setAdapters(List<Result> movies){
+    private void setAdapters(List<Result> movies) {
         recyclerViewMoviesAdapter = new RecyclerViewMoviesAdapter(movies);
-        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT){
+        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
             moviesRecyclerView.setLayoutManager(new GridLayoutManager(this, 2));
         } else {
             moviesRecyclerView.setLayoutManager(new GridLayoutManager(this, 4));
@@ -125,30 +124,25 @@ public class ShowMoviesActivity extends AppCompatActivity {
         dialog.show();
         favouritesList = new ArrayList<>();
         favouritesList = favouriteDBHelper.getAllFavourite();
-//        favouritesList.addAll(favouriteDBHelper.getAllFavourite());
         if (favouritesList.size() == 0) {
             dialog.dismiss();
             Toast.makeText(getApplicationContext(), R.string.no_favourite_movies, Toast.LENGTH_SHORT).show();
         } else if (favouritesList.size() > 0) {
             setAdapters(favouritesList);
-            Toast.makeText(getApplicationContext(), String.valueOf(recyclerViewMoviesAdapter.getItemCount()), Toast.LENGTH_LONG).show();
-
-//            recyclerViewMoviesAdapter = new RecyclerViewMoviesAdapter(favouritesList, R.layout.movie_item, getApplicationContext());
-//            recyclerViewMoviesAdapter.notifyDataSetChanged();
             actionBar.setTitle(getResources().getString(R.string.favourites));
             dialog.dismiss();
         }
     }
 
     private void getMostPopularMovies() {
-//        dialog.show();
         try {
             Call<MovieResponse> call = apiService.getMostPopularMovies(API_KEY);
             call.enqueue(new Callback<MovieResponse>() {
                 @Override
                 public void onResponse(Call<MovieResponse> call, Response<MovieResponse> response) {
                     if (response.isSuccessful()) {
-                        moviesList = response.body().getResults();
+                        moviesList.clear();
+                        moviesList.addAll(response.body().getResults());
                         setAdapters(moviesList);
                         actionBar.setTitle(getResources().getString(R.string.most_popular));
                         dialog.dismiss();
