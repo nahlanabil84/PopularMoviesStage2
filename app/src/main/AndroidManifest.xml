@@ -19,8 +19,15 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".activities.MovieDataActivity"
+        <activity
+            android:name=".activities.MovieDataActivity"
             android:parentActivityName=".activities.ShowMoviesActivity" />
+
+        <provider
+            android:name=".database.FavMoviesContentProvider"
+            android:authorities="com.androiddevelopernanodegree.nahla.popularmoviesstage2.database"
+            android:enabled="true"
+            android:exported="true"></provider>
     </application>
 
 </manifest>

@@ -1,6 +1,5 @@
 package com.androiddevelopernanodegree.nahla.popularmoviesstage2.adapters;
 
-import android.content.Context;
 import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -9,7 +8,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.androiddevelopernanodegree.nahla.popularmoviesstage2.R;
 import com.androiddevelopernanodegree.nahla.popularmoviesstage2.activities.MovieDataActivity;
@@ -29,14 +27,14 @@ public class RecyclerViewMoviesAdapter extends RecyclerView.Adapter<RecyclerView
     private List<Result> moviesList;
 
 
-    public RecyclerViewMoviesAdapter(List<Result> moviesList){
-        this.moviesList=moviesList;
+    public RecyclerViewMoviesAdapter(List<Result> moviesList) {
+        this.moviesList = moviesList;
     }
 
     @Override
     public RecyclerViewMoviesAdapter.MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View itemView = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.movie_item, parent, false);
+                .inflate(R.layout.item_movie, parent, false);
 
         return new MyViewHolder(itemView);
     }
@@ -45,16 +43,15 @@ public class RecyclerViewMoviesAdapter extends RecyclerView.Adapter<RecyclerView
     public void onBindViewHolder(MyViewHolder holder, int position) {
 
 
-        if(moviesList.get(position).getPosterPath()!=null){
+        if (moviesList.get(position).getPosterPath() != null) {
             String url = IMAGE_BASE_URL + moviesList.get(position).getPosterPath();
             Picasso.with(holder.itemView.getContext()).
-                load(url)
-                .into(holder.posterImageView);
-        Log.d("Poster: ",moviesList.get(position).getOriginalTitle());
+                    load(url)
+                    .centerCrop().fit()
+                    .into(holder.posterImageView);
+            Log.d("Poster: ", moviesList.get(position).getOriginalTitle());
         }
         holder.titleTextView.setText(moviesList.get(position).getOriginalTitle());
-//        Log.d("Poster: ",moviesList.get(position).getOriginalTitle());
-
 
     }
 
@@ -79,11 +76,11 @@ public class RecyclerViewMoviesAdapter extends RecyclerView.Adapter<RecyclerView
 
         @Override
         public void onClick(View view) {
-            if (view.getId() == itemView.getId()){
+            if (view.getId() == itemView.getId()) {
                 int position = getAdapterPosition();
                 Result chosenMovie = moviesList.get(position);
                 Intent intent = new Intent(itemView.getContext(), MovieDataActivity.class);
-                intent.putExtra("MovieData",chosenMovie);
+                intent.putExtra("MovieData", chosenMovie);
                 itemView.getContext().startActivity(intent);
             }
         }

@@ -3,16 +3,16 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    android:gravity="center">
 
     <android.support.v7.widget.RecyclerView
-        android:id="@+id/movies_posters_recycler_view"
+        android:id="@+id/movie_data_recycler_reviews"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:scrollbars="vertical"
-        app:spanCount="2"
-        app:layoutManager="android.support.v7.widget.GridLayoutManager"
-        tools:listitem="@layout/item_movie" />
+        app:layoutManager="android.support.v7.widget.LinearLayoutManager"
+        tools:listitem="@layout/item_review" />
 
     <TextView
         android:id="@+id/sizeZero_tv"
@@ -26,10 +26,23 @@
         android:background="@drawable/shape_text"
         android:gravity="center"
         android:padding="8dp"
-        android:text="@string/no_favourite_movies"
+        android:text="@string/no_reviews"
         android:textColor="@color/colorPrimaryDark"
         android:textSize="35pt"
         android:textStyle="bold"
         android:visibility="gone" />
+
+    <ImageView
+        android:id="@+id/cancelB"
+        android:layout_width="35dp"
+        android:layout_height="35dp"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:layout_margin="4dp"
+        android:background="@drawable/shape_cancel"
+        android:padding="8dp"
+        android:src="@drawable/cancel"
+        android:textColor="@color/colorSnowWhite"
+        android:tint="@color/colorSnowWhite" />
 
 </RelativeLayout>
