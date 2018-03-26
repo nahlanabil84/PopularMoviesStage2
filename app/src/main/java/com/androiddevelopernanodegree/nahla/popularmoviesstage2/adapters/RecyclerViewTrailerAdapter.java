@@ -9,10 +9,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.TextView;
 
 import com.androiddevelopernanodegree.nahla.popularmoviesstage2.R;
 import com.androiddevelopernanodegree.nahla.popularmoviesstage2.models.TrailersResult;
+import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
@@ -43,7 +43,9 @@ public class RecyclerViewTrailerAdapter extends RecyclerView.Adapter<RecyclerVie
 
     @Override
     public void onBindViewHolder(TrailerHolder holder, int position) {
-        holder.trailerNumTV.setText(trailersResults.get(position).getName());
+        String url = "http://img.youtube.com/vi/" + trailersResults.get(position).getKey() + "/0.jpg";
+
+        Picasso.with(context).load(url).centerCrop().fit().into(holder.trailerImageTV);
     }
 
     @Override
@@ -53,12 +55,12 @@ public class RecyclerViewTrailerAdapter extends RecyclerView.Adapter<RecyclerVie
 
     public class TrailerHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         ImageView playTrailerIV;
-        TextView trailerNumTV;
+        ImageView trailerImageTV;
 
         public TrailerHolder(View itemView) {
             super(itemView);
             playTrailerIV = itemView.findViewById(R.id.trailer_watch_imageView);
-            trailerNumTV = itemView.findViewById(R.id.trailer_name_textView);
+            trailerImageTV = itemView.findViewById(R.id.trailer_image_imageView);
             itemView.setOnClickListener(this);
         }
 

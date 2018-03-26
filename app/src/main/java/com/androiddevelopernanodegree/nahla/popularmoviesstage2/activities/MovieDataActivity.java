@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -24,19 +25,31 @@ import com.squareup.picasso.Picasso;
 import java.util.ArrayList;
 import java.util.List;
 
+import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
 import static com.androiddevelopernanodegree.nahla.popularmoviesstage2.models.Result.IMAGE_BASE_URL;
 
 public class MovieDataActivity extends AppCompatActivity {
+
+    @BindView(R.id.movie_poster_image_view)
+    ImageView moviePosterThumbnailIV;
+    @BindView(R.id.movie_title_text_view)
+    TextView movieTitleTV;
+    @BindView(R.id.movie_overview_text_view)
+    TextView movieOverviewTV;
+    @BindView(R.id.movie_vote_rate_text_view)
+    TextView movieVoteAverageTV;
+    @BindView(R.id.movie_release_date_text_view)
+    TextView movieReleaseDateTV;
+    @BindView(R.id.movie_star_markAsFavourite)
+    MaterialFavoriteButton materialFavoriteButton;
+
     public static final String MOVIE_ID = "movie_id";
     private Result chosenMovie;
-    private ImageView moviePosterThumbnailIV;
-    private TextView movieTitleTV, movieOverviewTV, movieVoteAverageTV, movieReleaseDateTV;
     private String title, backdropPath, overview, releaseDate;
     private double voteAverage;
-    private MaterialFavoriteButton materialFavoriteButton;
     private ActionBar actionBar;
     private String posterPath;
     private boolean isFavorited;
@@ -49,9 +62,10 @@ public class MovieDataActivity extends AppCompatActivity {
 
         ButterKnife.bind(this);
 
-        chosenMovie = (Result) getIntent().getSerializableExtra("MovieData");
+        chosenMovie = getIntent().getParcelableExtra("MovieData");
+        actionBar = getSupportActionBar();
+        isFavorited = searchInFavoritesContentProvider(chosenMovie.getId());
 
-        initViews();
         getData();
         actionBar.setTitle(title);
         setActions();
@@ -94,50 +108,6 @@ public class MovieDataActivity extends AppCompatActivity {
 
     }
 
-
-    private boolean searchInFavoritesContentProvider(int id) {
-        boolean isFav = false;
-
-        favouritesList = new ArrayList<>();
-        List<Result> results = new ArrayList<>();
-
-        String sortingOrder = Favourites.FavouriteEntry.COLUMN_TITLE + " ASC";
-        String selection = null;
-        String[] selectionArgs = null;
-        Cursor cursor = getContentResolver().query(FavMoviesContentProvider.URI_MOVIE, null, selection, selectionArgs, sortingOrder);
-
-        if (cursor != null && cursor.getCount() > 0) {
-            cursor.moveToFirst();
-
-            Result favMovie = null;
-            do {
-                favMovie = new Result();
-                favMovie.setId(cursor.getInt(1));
-                favMovie.setOriginalTitle(cursor.getString(2));
-                favMovie.setVoteAverage(cursor.getDouble(3));
-                favMovie.setPosterPath(cursor.getString(4));
-                favMovie.setOverview(cursor.getString(5));
-
-                results.add(favMovie);
-            } while (cursor.moveToNext());
-        }
-
-        favouritesList = results;
-        if (favouritesList.size() <= 0) {
-            isFav = false;
-        } else {
-            for (int i = 0; i < favouritesList.size(); i++) {
-                if (favouritesList.get(i).getId() == id) {
-                    isFav = true;
-                    break;
-                } else
-                    isFav = false;
-            }
-        }
-
-        return isFav;
-    }
-
     @Override
     public boolean onSupportNavigateUp() {
         onBackPressed();
@@ -161,17 +131,6 @@ public class MovieDataActivity extends AppCompatActivity {
 
     }
 
-    private void initViews() {
-        moviePosterThumbnailIV = findViewById(R.id.movie_poster_image_view);
-        movieTitleTV = findViewById(R.id.movie_title_text_view);
-        movieOverviewTV = findViewById(R.id.movie_overview_text_view);
-        movieVoteAverageTV = findViewById(R.id.movie_vote_rate_text_view);
-        movieReleaseDateTV = findViewById(R.id.movie_release_date_text_view);
-        materialFavoriteButton = findViewById(R.id.movie_star_markAsFavourite);
-        actionBar = getSupportActionBar();
-        isFavorited = searchInFavoritesContentProvider(chosenMovie.getId());
-    }
-
     private void getData() {
         title = chosenMovie.getOriginalTitle();
         backdropPath = chosenMovie.getBackdropPath();
@@ -187,12 +146,76 @@ public class MovieDataActivity extends AppCompatActivity {
 
     }
 
+    private boolean searchInFavoritesContentProvider(int id) {
+        boolean isFav = false;
+
+        favouritesList = getFavoritesList();
+
+        if (favouritesList.size() <= 0) {
+            isFav = false;
+        } else {
+            for (int i = 0; i < favouritesList.size(); i++) {
+                if (favouritesList.get(i).getId() == id) {
+                    isFav = true;
+                    break;
+                } else
+                    isFav = false;
+            }
+        }
+
+        return isFav;
+    }
+
+    private int getFavSize() {
+        int count = 0;
+
+        favouritesList = getFavoritesList();
+
+        if (favouritesList.size() <= 0) {
+            count = 0;
+        } else {
+            count = favouritesList.size();
+        }
+
+        return count;
+    }
+
+    @NonNull
+    private List<Result> getFavoritesList() {
+        List<Result> results = new ArrayList<>();
+
+        String sortingOrder = Favourites.FavouriteEntry.COLUMN_TITLE + " ASC";
+        String selection = null;
+        String[] selectionArgs = null;
+        Cursor cursor = getContentResolver().query(FavMoviesContentProvider.URI_MOVIE, null, selection, selectionArgs, sortingOrder);
+
+        if (cursor != null && cursor.getCount() > 0) {
+            cursor.moveToFirst();
+
+            Result favMovie = null;
+            do {
+                favMovie = new Result();
+                favMovie.setId(cursor.getInt(1));
+                favMovie.setOriginalTitle(cursor.getString(2));
+                favMovie.setVoteAverage(cursor.getDouble(3));
+                favMovie.setPosterPath(cursor.getString(4));
+                favMovie.setOverview(cursor.getString(5));
+
+                results.add(favMovie);
+            } while (cursor.moveToNext());
+        }
+        return results;
+    }
+
     private void removeFavouriteContentProvider(int id) {
         int del = getContentResolver().delete(FavMoviesContentProvider.URI_MOVIE, Favourites.FavouriteEntry.COLUMN_MOVIEID + "=?", new String[]{String.valueOf(id)});
 
         if (del > 0) {
             Toast.makeText(getApplicationContext(), chosenMovie.getOriginalTitle() + " "
                     + getResources().getString(R.string.removed_from_fav), Toast.LENGTH_SHORT).show();
+            if (getFavSize() == 0) {
+
+            }
         } else {
             Toast.makeText(getApplicationContext(), chosenMovie.getOriginalTitle() + " "
                     + getResources().getString(R.string.not_removed_from_fav), Toast.LENGTH_SHORT).show();

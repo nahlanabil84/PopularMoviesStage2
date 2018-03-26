@@ -1,17 +1,19 @@
 package com.androiddevelopernanodegree.nahla.popularmoviesstage2.activities;
 
-import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -31,61 +33,120 @@ import com.androiddevelopernanodegree.nahla.popularmoviesstage2.retrofit.ApiInte
 import java.util.ArrayList;
 import java.util.List;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
 public class ShowMoviesActivity extends AppCompatActivity {
-    private final String TAG = "Movies";
+
     //TODO Insert your API_KEY
     public final static String API_KEY = "INSERT_YOUR_API_KEY";
-    private RecyclerView moviesRecyclerView;
-    private TextView noMovies;
+
+    private final String TAG = "Movies";
+
+    private static final String RV_POSITION = "SAVED_POSITION";
+    private static final String LISTING = "LISTING";
+
+    private static final String SORT_CRITERION_KEY = "SORT_CRITERION_KEY";
+    public static final String END_POINT_POPULAR = "popular";
+    public static final String END_POINT_TOP_RATED = "top_rated";
+    public static final String SORT_BY_FAV = "Fav";
+
+    @BindView(R.id.movies_posters_recycler_view)
+    RecyclerView moviesRecyclerView;
+    @BindView(R.id.sizeZero_tv)
+    TextView noMovies;
+
+    ActionBar actionBar;
+
+    private RecyclerViewMoviesAdapter recyclerViewMoviesAdapter;
+    private List<Result> favouritesList;
+    GridLayoutManager layoutManager;
+    Parcelable layoutManagerState;
+
+    SharedPreferences sharedPref;
+    SharedPreferences.Editor editor;
+    String listing = "";
+
     private List<Result> moviesList;
     private ApiInterface apiService;
-    private RecyclerViewMoviesAdapter recyclerViewMoviesAdapter;
-    private ProgressDialog dialog;
-    private List<Result> favouritesList;
-    ActionBar actionBar;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_show_movies);
 
+        ButterKnife.bind(this);
+
         if (isOnline()) {
-            initViews();
-            getMostPopularMovies();
+            init();
+
+            String sortBy = sharedPref.getString(SORT_CRITERION_KEY, END_POINT_POPULAR);
+            if (!sortBy.contains(SORT_BY_FAV))
+                getMovies(sortBy);
+            else
+                getFavouritesContentProvider();
+
             setAdapters(moviesList);
+
         } else {
             Toast.makeText(getApplicationContext(), "No internet connection!!", Toast.LENGTH_LONG).show();
         }
     }
 
     @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString(LISTING, listing);
+        outState.putParcelable(RV_POSITION, layoutManager.onSaveInstanceState());
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        if (savedInstanceState != null) {
+            layoutManagerState = savedInstanceState.getParcelable(RV_POSITION);
+            listing = savedInstanceState.getString(LISTING);
+        }
+
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        setLoadingDialog();
         getMenuInflater().inflate(R.menu.menu_action_bar, menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        setLoadingDialog();
         switch (item.getItemId()) {
+
             case R.id.most_popular:
-                dialog.show();
-                getMostPopularMovies();
+                saveSortingSharedPref(END_POINT_POPULAR);
+                getMovies(END_POINT_POPULAR);
                 return true;
+
             case R.id.top_rated:
-                getTopRatedMovies();
+                saveSortingSharedPref(END_POINT_TOP_RATED);
+                getMovies(END_POINT_TOP_RATED);
                 return true;
+
             case R.id.favourites:
+                saveSortingSharedPref(SORT_BY_FAV);
                 getFavouritesContentProvider();
                 return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void saveSortingSharedPref(String sortBy) {
+        listing = sortBy;
+        editor.putString(SORT_CRITERION_KEY, sortBy);
+        editor.commit();
     }
 
     public boolean isOnline() {
@@ -95,37 +156,32 @@ public class ShowMoviesActivity extends AppCompatActivity {
         return netInfo != null && netInfo.isConnectedOrConnecting();
     }
 
-    private void initViews() {
-        moviesRecyclerView = findViewById(R.id.movies_posters_recycler_view);
-        noMovies = findViewById(R.id.sizeZero_tv);
+    private void init() {
         actionBar = getSupportActionBar();
         moviesList = new ArrayList<>();
         apiService = ApiClient.getClient().create(ApiInterface.class);
-        setLoadingDialog();
+        sharedPref = getPreferences(Context.MODE_PRIVATE);
+        editor = sharedPref.edit();
     }
 
     private void setAdapters(List<Result> movies) {
         recyclerViewMoviesAdapter = new RecyclerViewMoviesAdapter(movies);
         if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
-            moviesRecyclerView.setLayoutManager(new GridLayoutManager(this, 2));
+            layoutManager = new GridLayoutManager(this, calculateNoOfColumns(this));
         } else {
-            moviesRecyclerView.setLayoutManager(new GridLayoutManager(this, 4));
+            layoutManager = new GridLayoutManager(this, calculateNoOfColumns(this));
         }
+        moviesRecyclerView.setLayoutManager(layoutManager);
         moviesRecyclerView.setItemAnimator(new DefaultItemAnimator());
         moviesRecyclerView.setAdapter(recyclerViewMoviesAdapter);
         recyclerViewMoviesAdapter.notifyDataSetChanged();
 
     }
 
-    private void setLoadingDialog() {
-        dialog = new ProgressDialog(ShowMoviesActivity.this);
-        String pleaseWait = getResources().getString(R.string.Dialog_please_wait);
-        dialog.setMessage(pleaseWait);
-        dialog.setCancelable(false);
-    }
-
     private void getFavouritesContentProvider() {
-        dialog.show();
+
+        actionBar.setTitle(getResources().getString(R.string.favourites));
+
         favouritesList = new ArrayList<>();
         List<Result> results = new ArrayList<>();
         String sortingOrder = Favourites.FavouriteEntry.COLUMN_TITLE + " ASC";
@@ -152,77 +208,37 @@ public class ShowMoviesActivity extends AppCompatActivity {
         favouritesList = results;
         if (favouritesList.size() > 0) {
             setAdapters(favouritesList);
-            actionBar.setTitle(getResources().getString(R.string.favourites));
 
             noMovies.setVisibility(View.GONE);
             moviesRecyclerView.setVisibility(View.VISIBLE);
 
-            dialog.dismiss();
         } else {
-            actionBar.setTitle(getResources().getString(R.string.favourites));
 
             moviesRecyclerView.setVisibility(View.GONE);
             noMovies.setVisibility(View.VISIBLE);
 
-            dialog.dismiss();
         }
     }
 
-    private void getMostPopularMovies() {
+    private void getMovies(String sortType) {
+
+        setTitle(sortType);
+
         try {
-            Call<MovieResponse> call = apiService.getMostPopularMovies(API_KEY);
-            call.enqueue(new Callback<MovieResponse>() {
-                @Override
-                public void onResponse(Call<MovieResponse> call, Response<MovieResponse> response) {
-                    if (response.isSuccessful()) {
-                        moviesList.clear();
-                        moviesList.addAll(response.body().getResults());
-                        setAdapters(moviesList);
-                        actionBar.setTitle(getResources().getString(R.string.most_popular));
-
-                        noMovies.setVisibility(View.GONE);
-                        moviesRecyclerView.setVisibility(View.VISIBLE);
-
-                        dialog.dismiss();
-                    } else {
-                        dialog.dismiss();
-                        Log.v(TAG, response.errorBody().toString());
-                        Toast.makeText(getApplicationContext(), "Failed to get movies!! " + response.message(), Toast.LENGTH_LONG).show();
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<MovieResponse> call, Throwable t) {
-                    // Log error here since request failed
-                    dialog.dismiss();
-                    Log.e(TAG, t.toString());
-                }
-            });
-        } catch (Exception ex) {
-            dialog.dismiss();
-            Log.e(TAG, ex.toString());
-            Toast.makeText(getApplicationContext(), ex.toString(), Toast.LENGTH_LONG).show();
-        }
-    }
-
-    private void getTopRatedMovies() {
-        dialog.show();
-        try {
-            Call<MovieResponse> call = apiService.getTopRatedMovies(API_KEY);
+            Call<MovieResponse> call = apiService.getMovies(sortType, API_KEY);
             call.enqueue(new Callback<MovieResponse>() {
                 @Override
                 public void onResponse(Call<MovieResponse> call, Response<MovieResponse> response) {
                     if (response.isSuccessful()) {
                         moviesList = response.body().getResults();
                         setAdapters(moviesList);
-                        actionBar.setTitle(getResources().getString(R.string.top_rated));
 
                         noMovies.setVisibility(View.GONE);
                         moviesRecyclerView.setVisibility(View.VISIBLE);
 
-                        dialog.dismiss();
                     } else {
-                        dialog.dismiss();
+
+
                         Log.v(TAG, response.errorBody().toString());
                         Toast.makeText(getApplicationContext(), "Failed to get movies!! " + response.message(), Toast.LENGTH_LONG).show();
                     }
@@ -231,16 +247,47 @@ public class ShowMoviesActivity extends AppCompatActivity {
                 @Override
                 public void onFailure(Call<MovieResponse> call, Throwable t) {
                     // Log error here since request failed
-                    dialog.dismiss();
                     Log.e(TAG, t.toString());
                 }
             });
         } catch (Exception ex) {
-            dialog.dismiss();
             Log.e(TAG, ex.toString());
             Toast.makeText(getApplicationContext(), ex.toString(), Toast.LENGTH_LONG).show();
         }
 
+    }
+
+    private void setTitle(String sortType) {
+        switch (sortType) {
+            case END_POINT_POPULAR:
+                actionBar.setTitle(getResources().getString(R.string.most_popular));
+                break;
+            case END_POINT_TOP_RATED:
+                actionBar.setTitle(getResources().getString(R.string.top_rated));
+                break;
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        if (layoutManagerState != null) {
+            layoutManager.onRestoreInstanceState(layoutManagerState);
+        }
+
+        if (listing.contains(SORT_BY_FAV))
+            getFavouritesContentProvider();
+    }
+
+    public static int calculateNoOfColumns(Context context) {
+        DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
+        float dpWidth = displayMetrics.widthPixels / displayMetrics.density;
+        int scalingFactor = 180;
+        int noOfColumns = (int) (dpWidth / scalingFactor);
+        if (noOfColumns < 2)
+            noOfColumns = 2;
+        return noOfColumns;
     }
 
 }
