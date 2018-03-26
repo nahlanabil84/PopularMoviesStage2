@@ -45,10 +45,9 @@ public class RecyclerViewMoviesAdapter extends RecyclerView.Adapter<RecyclerView
 
         if (moviesList.get(position).getPosterPath() != null) {
             String url = IMAGE_BASE_URL + moviesList.get(position).getPosterPath();
-            Picasso.with(holder.itemView.getContext()).
-                    load(url)
-                    .centerCrop().fit()
-                    .into(holder.posterImageView);
+
+            Picasso.with(holder.itemView.getContext()).load(url).centerCrop().fit().into(holder.posterImageView);
+
             Log.d("Poster: ", moviesList.get(position).getOriginalTitle());
         }
         holder.titleTextView.setText(moviesList.get(position).getOriginalTitle());

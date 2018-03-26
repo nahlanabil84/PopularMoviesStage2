@@ -7,7 +7,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.DefaultItemAnimator;
-import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Gravity;
@@ -36,6 +36,7 @@ import retrofit2.Response;
 
 import static com.androiddevelopernanodegree.nahla.popularmoviesstage2.activities.MovieDataActivity.MOVIE_ID;
 import static com.androiddevelopernanodegree.nahla.popularmoviesstage2.activities.ShowMoviesActivity.API_KEY;
+import static com.androiddevelopernanodegree.nahla.popularmoviesstage2.activities.ShowMoviesActivity.calculateNoOfColumns;
 
 /**
  * Created by NAHLA on 3/24/2018.
@@ -50,6 +51,7 @@ public class TrailersDialog extends DialogFragment {
     TextView noTrailersTV;
 
     private RecyclerViewTrailerAdapter recyclerViewTrailerAdapter;
+    private GridLayoutManager layoutManager;
     private List<TrailersResult> trailersResults = new ArrayList<>();
     private int movieID;
 
@@ -124,8 +126,10 @@ public class TrailersDialog extends DialogFragment {
     }
 
     private void setAdapter() {
+        layoutManager = new GridLayoutManager(getActivity().getApplicationContext(), calculateNoOfColumns(getActivity().getApplicationContext()));
+        movieDataRecyclerTrailers.setLayoutManager(layoutManager);
+//        movieDataRecyclerTrailers.setLayoutManager(new LinearLayoutManager(getActivity().getApplicationContext()));
         recyclerViewTrailerAdapter = new RecyclerViewTrailerAdapter(getActivity().getApplicationContext(), trailersResults);
-        movieDataRecyclerTrailers.setLayoutManager(new LinearLayoutManager(getActivity().getApplicationContext()));
         movieDataRecyclerTrailers.setItemAnimator(new DefaultItemAnimator());
         movieDataRecyclerTrailers.setAdapter(recyclerViewTrailerAdapter);
     }
