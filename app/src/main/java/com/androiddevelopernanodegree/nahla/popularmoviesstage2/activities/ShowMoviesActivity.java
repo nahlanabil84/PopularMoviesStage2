@@ -47,7 +47,6 @@ public class ShowMoviesActivity extends AppCompatActivity {
     private final String TAG = "Movies";
 
     private static final String RV_POSITION = "SAVED_POSITION";
-    private static final String LISTING = "LISTING";
 
     private static final String SORT_CRITERION_KEY = "SORT_CRITERION_KEY";
     public static final String END_POINT_POPULAR = "popular";
@@ -64,7 +63,6 @@ public class ShowMoviesActivity extends AppCompatActivity {
     private RecyclerViewMoviesAdapter recyclerViewMoviesAdapter;
     private List<Result> favouritesList;
     GridLayoutManager layoutManager;
-    Parcelable layoutManagerState;
 
     SharedPreferences sharedPref;
     SharedPreferences.Editor editor;
@@ -72,6 +70,7 @@ public class ShowMoviesActivity extends AppCompatActivity {
 
     private List<Result> moviesList;
     private ApiInterface apiService;
+    private Parcelable mLayoutManagerSavedState;
 
 
     @Override
@@ -81,35 +80,32 @@ public class ShowMoviesActivity extends AppCompatActivity {
 
         ButterKnife.bind(this);
 
-        if (isOnline()) {
-            init();
+        init();
 
-            String sortBy = sharedPref.getString(SORT_CRITERION_KEY, END_POINT_POPULAR);
-            if (!sortBy.contains(SORT_BY_FAV))
-                getMovies(sortBy);
-            else
-                getFavouritesContentProvider();
-
-            setAdapters(moviesList);
-
-        } else {
-            Toast.makeText(getApplicationContext(), "No internet connection!!", Toast.LENGTH_LONG).show();
+        if (savedInstanceState != null) {
+            mLayoutManagerSavedState = savedInstanceState.getParcelable(RV_POSITION);
         }
+
+        String sortBy = sharedPref.getString(SORT_CRITERION_KEY, END_POINT_POPULAR);
+
+        if (!sortBy.contains(SORT_BY_FAV))
+            getMovies(sortBy);
+        else
+            getFavouritesContentProvider();
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putString(LISTING, listing);
         outState.putParcelable(RV_POSITION, layoutManager.onSaveInstanceState());
     }
 
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
+
         if (savedInstanceState != null) {
-            layoutManagerState = savedInstanceState.getParcelable(RV_POSITION);
-            listing = savedInstanceState.getString(LISTING);
+            mLayoutManagerSavedState = savedInstanceState.getParcelable(RV_POSITION);
         }
 
     }
@@ -144,7 +140,6 @@ public class ShowMoviesActivity extends AppCompatActivity {
     }
 
     private void saveSortingSharedPref(String sortBy) {
-        listing = sortBy;
         editor.putString(SORT_CRITERION_KEY, sortBy);
         editor.commit();
     }
@@ -175,6 +170,10 @@ public class ShowMoviesActivity extends AppCompatActivity {
         moviesRecyclerView.setItemAnimator(new DefaultItemAnimator());
         moviesRecyclerView.setAdapter(recyclerViewMoviesAdapter);
         recyclerViewMoviesAdapter.notifyDataSetChanged();
+
+        if (mLayoutManagerSavedState != null) {
+            layoutManager.onRestoreInstanceState(mLayoutManagerSavedState);
+        }
 
     }
 
@@ -207,6 +206,8 @@ public class ShowMoviesActivity extends AppCompatActivity {
 
         favouritesList = results;
         if (favouritesList.size() > 0) {
+            moviesList.clear();
+            moviesList.addAll(favouritesList);
             setAdapters(favouritesList);
 
             noMovies.setVisibility(View.GONE);
@@ -224,37 +225,42 @@ public class ShowMoviesActivity extends AppCompatActivity {
 
         setTitle(sortType);
 
-        try {
-            Call<MovieResponse> call = apiService.getMovies(sortType, API_KEY);
-            call.enqueue(new Callback<MovieResponse>() {
-                @Override
-                public void onResponse(Call<MovieResponse> call, Response<MovieResponse> response) {
-                    if (response.isSuccessful()) {
-                        moviesList = response.body().getResults();
-                        setAdapters(moviesList);
-
-                        noMovies.setVisibility(View.GONE);
-                        moviesRecyclerView.setVisibility(View.VISIBLE);
-
-                    } else {
+        if (isOnline()) {
 
 
-                        Log.v(TAG, response.errorBody().toString());
-                        Toast.makeText(getApplicationContext(), "Failed to get movies!! " + response.message(), Toast.LENGTH_LONG).show();
+            try {
+                Call<MovieResponse> call = apiService.getMovies(sortType, API_KEY);
+                call.enqueue(new Callback<MovieResponse>() {
+                    @Override
+                    public void onResponse(Call<MovieResponse> call, Response<MovieResponse> response) {
+                        if (response.isSuccessful()) {
+                            moviesList = response.body().getResults();
+                            setAdapters(moviesList);
+
+                            noMovies.setVisibility(View.GONE);
+                            moviesRecyclerView.setVisibility(View.VISIBLE);
+
+                        } else {
+
+
+                            Log.v(TAG, response.errorBody().toString());
+                            Toast.makeText(getApplicationContext(), "Failed to get movies!! " + response.message(), Toast.LENGTH_LONG).show();
+                        }
                     }
-                }
 
-                @Override
-                public void onFailure(Call<MovieResponse> call, Throwable t) {
-                    // Log error here since request failed
-                    Log.e(TAG, t.toString());
-                }
-            });
-        } catch (Exception ex) {
-            Log.e(TAG, ex.toString());
-            Toast.makeText(getApplicationContext(), ex.toString(), Toast.LENGTH_LONG).show();
+                    @Override
+                    public void onFailure(Call<MovieResponse> call, Throwable t) {
+                        // Log error here since request failed
+                        Log.e(TAG, t.toString());
+                    }
+                });
+            } catch (Exception ex) {
+                Log.e(TAG, ex.toString());
+                Toast.makeText(getApplicationContext(), ex.toString(), Toast.LENGTH_LONG).show();
+            }
+        } else {
+            Toast.makeText(getApplicationContext(), "No internet connection!!", Toast.LENGTH_LONG).show();
         }
-
     }
 
     private void setTitle(String sortType) {
@@ -271,10 +277,6 @@ public class ShowMoviesActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-
-        if (layoutManagerState != null) {
-            layoutManager.onRestoreInstanceState(layoutManagerState);
-        }
 
         if (listing.contains(SORT_BY_FAV))
             getFavouritesContentProvider();
